@@ -589,11 +589,31 @@ fn describe_trustee(trustee: &str) -> Option<String> {
 
 /// Trustees that must never appear on the store, and why.
 pub const FORBIDDEN_TRUSTEES: [(&str, &str, &str); 5] = [
-    ("WD", "S-1-1-0", "Everyone: any process on the box could rewrite what you launch"),
-    ("BU", "S-1-5-32-545", "BUILTIN\\Users: lets a second local account tamper with your config"),
-    ("AU", "S-1-5-11", "Authenticated Users: same exposure, wider"),
-    ("CO", "S-1-3-0", "CREATOR OWNER: grants by creation rather than identity"),
-    ("AC", "S-1-15-2-1", "ALL APPLICATION PACKAGES: exposes the store to sandboxed Store apps"),
+    (
+        "WD",
+        "S-1-1-0",
+        "Everyone: any process on the box could rewrite what you launch",
+    ),
+    (
+        "BU",
+        "S-1-5-32-545",
+        "BUILTIN\\Users: lets a second local account tamper with your config",
+    ),
+    (
+        "AU",
+        "S-1-5-11",
+        "Authenticated Users: same exposure, wider",
+    ),
+    (
+        "CO",
+        "S-1-3-0",
+        "CREATOR OWNER: grants by creation rather than identity",
+    ),
+    (
+        "AC",
+        "S-1-15-2-1",
+        "ALL APPLICATION PACKAGES: exposes the store to sandboxed Store apps",
+    ),
 ];
 
 /// Any forbidden trustee present in a descriptor.
@@ -603,7 +623,8 @@ pub fn forbidden_present(sddl: &str) -> Vec<&'static str> {
     for (alias, sid, why) in FORBIDDEN_TRUSTEES.iter() {
         let hit = aces.iter().any(|ace| {
             ace.kind == "ALLOW"
-                && (ace.trustee.eq_ignore_ascii_case(alias) || ace.trustee.eq_ignore_ascii_case(sid))
+                && (ace.trustee.eq_ignore_ascii_case(alias)
+                    || ace.trustee.eq_ignore_ascii_case(sid))
         });
         if hit {
             found.push(*why);
@@ -626,7 +647,10 @@ mod tests {
         assert!(sddl.contains("D:PAI"), "DACL must be protected");
         assert!(sddl.contains("(A;OICI;FA;;;S-1-5-21-1-2-3-1000)"));
         assert!(sddl.contains("(A;OICI;FA;;;SY)"));
-        assert!(!sddl.contains(";BA)"), "administrators must be absent by default");
+        assert!(
+            !sddl.contains(";BA)"),
+            "administrators must be absent by default"
+        );
     }
 
     #[test]
@@ -676,13 +700,19 @@ mod tests {
         assert_eq!(aces[0].kind, "ALLOW");
         assert_eq!(aces[0].rights, "full control (0x1F01FF)");
         assert_eq!(aces[0].flags, "object inherit, container inherit");
-        assert_eq!(aces[1].trustee_name.as_deref(), Some("NT AUTHORITY\\SYSTEM"));
+        assert_eq!(
+            aces[1].trustee_name.as_deref(),
+            Some("NT AUTHORITY\\SYSTEM")
+        );
     }
 
     /// The access mask from the first ACE of a descriptor, as a number.
     fn first_ace_mask(sddl: &str) -> u32 {
         let aces = parse_aces(sddl);
-        let raw = aces[0].raw.trim_matches(|c| c == '(' || c == ')').to_string();
+        let raw = aces[0]
+            .raw
+            .trim_matches(|c| c == '(' || c == ')')
+            .to_string();
         let rights = raw.split(';').nth(2).expect("rights field");
         let hex = rights.trim_start_matches("0x").trim_start_matches("0X");
         u32::from_str_radix(hex, 16).expect("hex mask")
@@ -709,7 +739,11 @@ mod tests {
             "FILE_WRITE_DATA would allow rewriting existing entries"
         );
         assert_ne!(mask & FILE_APPEND_DATA, 0, "cannot append");
-        assert_ne!(mask & FILE_WRITE_ATTRIBUTES, 0, "append mode opens need this");
+        assert_ne!(
+            mask & FILE_WRITE_ATTRIBUTES,
+            0,
+            "append mode opens need this"
+        );
         assert_ne!(mask & FILE_WRITE_EA, 0, "append mode opens need this");
         assert_ne!(mask & FILE_READ_DATA, 0, "the log has to be readable");
         assert_ne!(

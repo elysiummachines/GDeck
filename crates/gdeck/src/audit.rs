@@ -100,7 +100,8 @@ pub fn format_entry(
     format!(
         "{}\t{}\t{}\t{}\t{}",
         sanitize(timestamp),
-        key.map(|k| k.to_string()).unwrap_or_else(|| "-".to_string()),
+        key.map(|k| k.to_string())
+            .unwrap_or_else(|| "-".to_string()),
         sanitize(action),
         outcome.as_str(),
         sanitize(detail)
@@ -214,7 +215,13 @@ mod tests {
         // Without sanitising, this detail would end the line and start a new
         // one that looks like a genuine record.
         let nasty = "ok\n2026-01-01T00:00:00Z\tG9\tlaunch\tstarted\tsomething else";
-        let line = format_entry("2026-11-11T18:45:01Z", None, "launch", Outcome::Failed, nasty);
+        let line = format_entry(
+            "2026-11-11T18:45:01Z",
+            None,
+            "launch",
+            Outcome::Failed,
+            nasty,
+        );
         assert!(!line.contains('\n'), "a newline survived into the log");
         assert_eq!(line.split('\t').count(), 5, "tabs leaked and added fields");
     }

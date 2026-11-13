@@ -52,9 +52,7 @@ pub fn ensure_store_dir() -> Result<PathBuf> {
 /// This is the repair path. A file whose descriptor was loosened, or which was
 /// created by an older build with a different mask, is put back under the
 /// current policy without needing it to be deleted first.
-pub fn secure_all(
-    policy: &crate::security::Policy,
-) -> Result<Vec<(PathBuf, &'static str)>> {
+pub fn secure_all(policy: &crate::security::Policy) -> Result<Vec<(PathBuf, &'static str)>> {
     let dir = ensure_store_dir()?;
     crate::security::apply(&dir, &policy.directory_sddl())?;
     let mut secured = vec![(dir.clone(), "directory")];

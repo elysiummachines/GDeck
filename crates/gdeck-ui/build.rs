@@ -62,7 +62,14 @@ fn resource_file() -> Vec<u8> {
     entry(&mut file, 0, 0, 0, 0, &[]);
     for (index, (_, data)) in images.iter().enumerate() {
         let id = (index + 1) as u16;
-        entry(&mut file, RT_ICON, id, MOVEABLE_DISCARDABLE, LANG_EN_US, data);
+        entry(
+            &mut file,
+            RT_ICON,
+            id,
+            MOVEABLE_DISCARDABLE,
+            LANG_EN_US,
+            data,
+        );
     }
     entry(
         &mut file,
@@ -106,8 +113,8 @@ fn icon_image(size: u32) -> Vec<u8> {
 
     out.extend_from_slice(&40u32.to_le_bytes()); // biSize
     out.extend_from_slice(&(size as i32).to_le_bytes()); // biWidth
-    // Doubled, because the header describes the colour image and the mask
-    // together even when the mask carries nothing.
+                                                         // Doubled, because the header describes the colour image and the mask
+                                                         // together even when the mask carries nothing.
     out.extend_from_slice(&((size * 2) as i32).to_le_bytes()); // biHeight
     out.extend_from_slice(&1u16.to_le_bytes()); // biPlanes
     out.extend_from_slice(&32u16.to_le_bytes()); // biBitCount

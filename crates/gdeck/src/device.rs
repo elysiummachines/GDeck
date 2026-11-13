@@ -68,7 +68,8 @@ pub fn enumerate() -> Vec<Collection> {
         let mut guid = Guid::default();
         HidD_GetHidGuid(&mut guid);
 
-        let set = SetupDiGetClassDevsW(&guid, ptr::null(), 0, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+        let set =
+            SetupDiGetClassDevsW(&guid, ptr::null(), 0, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
         if set == INVALID_HANDLE_VALUE {
             return found;
         }
@@ -89,7 +90,11 @@ pub fn enumerate() -> Vec<Collection> {
             let mut buf = vec![0u8; 2048];
             // SP_DEVICE_INTERFACE_DETAIL_DATA_W.cbSize is 8 on 64 bit and 6 on
             // 32 bit. DevicePath always starts at byte offset 4 either way.
-            let cb: u32 = if cfg!(target_pointer_width = "64") { 8 } else { 6 };
+            let cb: u32 = if cfg!(target_pointer_width = "64") {
+                8
+            } else {
+                6
+            };
             buf[0..4].copy_from_slice(&cb.to_le_bytes());
 
             let mut required = 0u32;

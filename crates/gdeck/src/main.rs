@@ -25,7 +25,11 @@ fn main() {
             args.get(3).map(|s| s.as_str()),
         ),
         "config" => cmd_config(args.get(2).map(|s| s.as_str()).unwrap_or("check")),
-        "audit" => cmd_audit(args.get(2).and_then(|s| s.parse::<usize>().ok()).unwrap_or(25)),
+        "audit" => cmd_audit(
+            args.get(2)
+                .and_then(|s| s.parse::<usize>().ok())
+                .unwrap_or(25),
+        ),
         "press" => cmd_press(args.get(2).map(|s| s.as_str()).unwrap_or("")),
         "run" => cmd_run(args.get(2).and_then(|s| s.parse::<u64>().ok())),
         other => {
@@ -137,7 +141,10 @@ fn load_checked_config() -> Option<gdeck::Config> {
             return None;
         }
         Ok(Integrity::SealUnreadable { code }) => {
-            println!("REFUSING TO RUN: a seal exists but cannot be opened (win32 {}).", code);
+            println!(
+                "REFUSING TO RUN: a seal exists but cannot be opened (win32 {}).",
+                code
+            );
             println!("  It belongs to a different account, or it is corrupt.");
             audit(
                 None,
@@ -169,7 +176,9 @@ fn fire(key: Option<GKey>, slot: &gdeck::Slot, context: &gdeck::actions::Context
     use gdeck::audit::Outcome;
 
     let (action, detail) = gdeck::actions::describe(slot);
-    let label = key.map(|k| k.to_string()).unwrap_or_else(|| "-".to_string());
+    let label = key
+        .map(|k| k.to_string())
+        .unwrap_or_else(|| "-".to_string());
 
     match gdeck::actions::perform(slot, context) {
         Ok(Performed::Nothing) => println!("  {} is unassigned", label),
@@ -179,7 +188,12 @@ fn fire(key: Option<GKey>, slot: &gdeck::Slot, context: &gdeck::actions::Context
         }
         Ok(Performed::Focused) => {
             println!("  {} focused the running {}", label, slot.label);
-            audit(key, action, Outcome::Started, &format!("focused {}", detail));
+            audit(
+                key,
+                action,
+                Outcome::Started,
+                &format!("focused {}", detail),
+            );
         }
         Ok(Performed::Opened) => {
             println!("  {} opened {}", label, detail);
@@ -192,7 +206,10 @@ fn fire(key: Option<GKey>, slot: &gdeck::Slot, context: &gdeck::actions::Context
         Ok(Performed::RanShell(run)) => {
             match run.exit_code {
                 Some(0) => println!("  {} ran {} and it succeeded (exit 0)", label, slot.label),
-                Some(code) => println!("  {} ran {} and it FAILED (exit {})", label, slot.label, code),
+                Some(code) => println!(
+                    "  {} ran {} and it FAILED (exit {})",
+                    label, slot.label, code
+                ),
                 None => println!(
                     "  {} ran {} (pid {}), still running after the wait",
                     label, slot.label, run.process_id
@@ -215,11 +232,21 @@ fn fire(key: Option<GKey>, slot: &gdeck::Slot, context: &gdeck::actions::Context
         }
         Err(gdeck::Error::Refused { reason }) => {
             println!("  {} REFUSED: {}", label, reason);
-            audit(key, action, Outcome::Refused, &format!("{}: {}", detail, reason));
+            audit(
+                key,
+                action,
+                Outcome::Refused,
+                &format!("{}: {}", detail, reason),
+            );
         }
         Err(err) => {
             println!("  {} FAILED: {}", label, err);
-            audit(key, action, Outcome::Failed, &format!("{}: {}", detail, err));
+            audit(
+                key,
+                action,
+                Outcome::Failed,
+                &format!("{}: {}", detail, err),
+            );
         }
     }
 }
@@ -278,7 +305,11 @@ fn cmd_run(seconds: Option<u64>) {
     println!(
         "{} of 18 keys assigned. Shell actions {}.",
         config.assigned_count(),
-        if config.shell_enabled { "ENABLED" } else { "disabled" }
+        if config.shell_enabled {
+            "ENABLED"
+        } else {
+            "disabled"
+        }
     );
 
     let (mut reader, events) = match Reader::start() {
@@ -346,16 +377,26 @@ fn cmd_run(seconds: Option<u64>) {
 
     reader.stop();
     println!();
-    println!("Stopped cleanly after {:.1}s.", started.elapsed().as_secs_f64());
+    println!(
+        "Stopped cleanly after {:.1}s.",
+        started.elapsed().as_secs_f64()
+    );
 }
 
 fn cmd_audit(count: usize) {
     match gdeck::audit::tail(count) {
         Ok(entries) if entries.is_empty() => println!("The audit log is empty."),
         Ok(entries) => {
-            println!("last {} entr{}:", entries.len(), if entries.len() == 1 { "y" } else { "ies" });
+            println!(
+                "last {} entr{}:",
+                entries.len(),
+                if entries.len() == 1 { "y" } else { "ies" }
+            );
             println!();
-            println!("{:<22} {:<5} {:<9} {:<9} DETAIL", "WHEN (UTC)", "KEY", "ACTION", "OUTCOME");
+            println!(
+                "{:<22} {:<5} {:<9} {:<9} DETAIL",
+                "WHEN (UTC)", "KEY", "ACTION", "OUTCOME"
+            );
             for entry in entries {
                 let f: Vec<&str> = entry.split('\t').collect();
                 if f.len() == 5 {
@@ -453,13 +494,25 @@ fn cmd_config(action: &str) {
             Ok(config) => {
                 println!("PARSED OK");
                 println!("  schema version : {}", config.version);
-                println!("  shell actions  : {}", if config.shell_enabled { "ENABLED" } else { "disabled" });
+                println!(
+                    "  shell actions  : {}",
+                    if config.shell_enabled {
+                        "ENABLED"
+                    } else {
+                        "disabled"
+                    }
+                );
                 println!("  keys assigned  : {} of 18", config.assigned_count());
                 if config.assigned_count() > 0 {
                     println!();
                     for key in GKey::all() {
                         if let Some(slot) = config.slot(key) {
-                            println!("  {:<4} {:<10} {}", key.to_string(), slot.action.type_name(), slot.label);
+                            println!(
+                                "  {:<4} {:<10} {}",
+                                key.to_string(),
+                                slot.action.type_name(),
+                                slot.label
+                            );
                         }
                     }
                 }
@@ -544,7 +597,12 @@ fn cmd_config(action: &str) {
             match gdeck::integrity::write_seal(&text, &Policy::lockdown(owner)) {
                 Ok(()) => {
                     println!("Sealed. The config on disk is now the accepted baseline.");
-                    audit(None, "seal", gdeck::audit::Outcome::Started, "config sealed");
+                    audit(
+                        None,
+                        "seal",
+                        gdeck::audit::Outcome::Started,
+                        "config sealed",
+                    );
                 }
                 Err(err) => eprintln!("{}", err),
             }
@@ -753,7 +811,10 @@ fn cmd_watch(seconds: Option<u64>) {
     };
 
     match seconds {
-        Some(s) => println!("Watching for {} seconds once you begin, then stopping cleanly.", s),
+        Some(s) => println!(
+            "Watching for {} seconds once you begin, then stopping cleanly.",
+            s
+        ),
         None => println!("Watching. Press Ctrl+C to stop."),
     }
     println!("Press some G keys. Normal typing is invisible to this process.");
@@ -814,7 +875,10 @@ fn cmd_watch(seconds: Option<u64>) {
     reader.stop();
 
     println!();
-    println!("Stopped cleanly after {:.1}s.", started.elapsed().as_secs_f64());
+    println!(
+        "Stopped cleanly after {:.1}s.",
+        started.elapsed().as_secs_f64()
+    );
     println!();
 
     if total_presses == 0 {

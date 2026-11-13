@@ -153,7 +153,10 @@ pub fn classify_target(target: &str) -> std::result::Result<TargetKind, String> 
         return Err("target is empty".to_string());
     }
     if target.chars().count() > MAX_TARGET_CHARS {
-        return Err(format!("target is longer than {} characters", MAX_TARGET_CHARS));
+        return Err(format!(
+            "target is longer than {} characters",
+            MAX_TARGET_CHARS
+        ));
     }
     if target.chars().any(|c| c.is_control()) {
         return Err("target contains a control character".to_string());
@@ -329,7 +332,10 @@ pub fn parse(text: &str) -> Result<Config> {
                 if let Some((first, _)) = slot.fields.get(&key) {
                     return Err(err(
                         line_no,
-                        format!("'{}' is set twice in this section, first at line {}", key, first),
+                        format!(
+                            "'{}' is set twice in this section, first at line {}",
+                            key, first
+                        ),
                     ));
                 }
                 slot.fields.insert(key, (line_no, value));
@@ -405,15 +411,23 @@ fn build_slot(key_name: &str, section: SlotFields, shell_enabled: bool) -> Resul
         }
     }
 
-    let action_name = get("action")
-        .ok_or_else(|| err(section.section_line, format!("[{}] has no 'action'", key_name)))?;
+    let action_name = get("action").ok_or_else(|| {
+        err(
+            section.section_line,
+            format!("[{}] has no 'action'", key_name),
+        )
+    })?;
 
     if action_name == "none" {
         return Ok(None);
     }
 
-    let label = get("label")
-        .ok_or_else(|| err(section.section_line, format!("[{}] has no 'label'", key_name)))?;
+    let label = get("label").ok_or_else(|| {
+        err(
+            section.section_line,
+            format!("[{}] has no 'label'", key_name),
+        )
+    })?;
     if label.is_empty() {
         return Err(err(at("label"), "label is empty"));
     }
@@ -498,7 +512,10 @@ fn build_slot(key_name: &str, section: SlotFields, shell_enabled: bool) -> Resul
                 return Err(err(at("target"), "shell command is empty"));
             }
             if command.chars().any(|c| c.is_control()) {
-                return Err(err(at("target"), "shell command contains a control character"));
+                return Err(err(
+                    at("target"),
+                    "shell command contains a control character",
+                ));
             }
             let hidden = match get("hidden") {
                 Some(v) => parse_bool(&v, at("hidden"))?,
@@ -764,7 +781,10 @@ mod tests {
     #[test]
     fn note_names_cannot_escape_the_notes_folder() {
         for bad in [r"..\..\config.ini", r"sub\note", "C:/note", "."] {
-            let text = format!("{}\n[G1]\naction = note\nlabel = N\ntarget = {}\n", MINIMAL, bad);
+            let text = format!(
+                "{}\n[G1]\naction = note\nlabel = N\ntarget = {}\n",
+                MINIMAL, bad
+            );
             assert!(
                 parse(&text).is_err(),
                 "note name {:?} should have been refused",

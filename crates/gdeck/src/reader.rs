@@ -100,12 +100,11 @@ fn run(cancel: isize, tx: Sender<Event>) {
             return;
         }
 
-        let opened = device::find_g_key_pipe()
-            .and_then(|collection| {
-                device::open_for_read(&collection)
-                    .ok()
-                    .map(|handle| (handle, collection.input_len))
-            });
+        let opened = device::find_g_key_pipe().and_then(|collection| {
+            device::open_for_read(&collection)
+                .ok()
+                .map(|handle| (handle, collection.input_len))
+        });
 
         if let Some((handle, input_len)) = opened {
             if tx.send(Event::Connected).is_err() {

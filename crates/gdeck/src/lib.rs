@@ -37,10 +37,7 @@ pub enum Error {
     /// `%LOCALAPPDATA%` is not set, which should not happen on Windows.
     NoLocalAppData,
     /// A filesystem operation failed.
-    Io {
-        what: &'static str,
-        detail: String,
-    },
+    Io { what: &'static str, detail: String },
     /// The config file was rejected. Carries the line so it can be pointed at.
     Config { line: usize, detail: String },
     /// An action was refused by policy before anything ran.

@@ -272,12 +272,10 @@ fn shell_error(code: isize) -> String {
         27 => "the file association is incomplete or invalid".to_string(),
         28 => "the request timed out".to_string(),
         29 | 30 => "the handler refused or was busy".to_string(),
-        31 => {
-            "no application is associated with this file type. Check the \
+        31 => "no application is associated with this file type. Check the \
              association in Windows Settings, or bind the key to the program \
              directly with a launch action instead."
-                .to_string()
-        }
+            .to_string(),
         32 => "the required library was not found".to_string(),
         other => format!("the shell refused it (SE_ERR {})", other),
     }
@@ -324,7 +322,9 @@ fn shell_open(target: &str, verb: &str) -> Result<()> {
 
 /// Where a note lives on disk.
 pub fn note_path(name: &str) -> Result<PathBuf> {
-    Ok(store::store_dir()?.join(store::NOTES_DIR).join(format!("{}.txt", name)))
+    Ok(store::store_dir()?
+        .join(store::NOTES_DIR)
+        .join(format!("{}.txt", name)))
 }
 
 fn ensure_note(name: &str, policy: &Policy) -> Result<PathBuf> {
@@ -377,8 +377,7 @@ pub fn perform(slot: &Slot, context: &Context<'_>) -> Result<Performed> {
 
             match kind {
                 TargetKind::AbsolutePath => {
-                    let process_id =
-                        start_process(target, args, workdir, 0, SW_SHOWNORMAL as u16)?;
+                    let process_id = start_process(target, args, workdir, 0, SW_SHOWNORMAL as u16)?;
                     Ok(Performed::Launched { process_id })
                 }
                 // A URI has no executable to name, so it must go to the handler.
@@ -436,8 +435,8 @@ pub fn perform(slot: &Slot, context: &Context<'_>) -> Result<Performed> {
 /// pipe's write end is marked inheritable. The read end is explicitly cleared
 /// with `SetHandleInformation`, so the child cannot read back what it wrote.
 fn run_shell(command: &str, hidden: bool) -> Result<ShellRun> {
-    let comspec = std::env::var("ComSpec")
-        .unwrap_or_else(|_| r"C:\Windows\System32\cmd.exe".to_string());
+    let comspec =
+        std::env::var("ComSpec").unwrap_or_else(|_| r"C:\Windows\System32\cmd.exe".to_string());
 
     let application = wide(&comspec);
     let mut line = command_line(&comspec, &format!("/C {}", command));
@@ -632,14 +631,21 @@ mod tests {
         // "error 31" would tell them nothing.
         let message = shell_error(31);
         assert!(message.contains("no application is associated"));
-        assert!(message.contains("launch action"), "it should suggest the way out");
+        assert!(
+            message.contains("launch action"),
+            "it should suggest the way out"
+        );
     }
 
     #[test]
     fn every_failing_hinstapp_value_is_treated_as_failure() {
         // Anything at or below 32 is an error, including 0 and 32 itself.
         for code in [0, 2, 3, 5, 8, 26, 31, 32] {
-            assert!(!shell_error(code).is_empty(), "code {} has no message", code);
+            assert!(
+                !shell_error(code).is_empty(),
+                "code {} has no message",
+                code
+            );
         }
     }
 

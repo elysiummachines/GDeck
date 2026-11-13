@@ -124,16 +124,15 @@ extern "system" {
         template: isize,
     ) -> isize;
     fn CloseHandle(h: isize) -> i32;
-    fn ReadFile(
-        h: isize,
-        buf: *mut u8,
-        len: u32,
-        read: *mut u32,
-        ov: *mut Overlapped,
-    ) -> i32;
+    fn ReadFile(h: isize, buf: *mut u8, len: u32, read: *mut u32, ov: *mut Overlapped) -> i32;
     fn CancelIoEx(h: isize, ov: *mut Overlapped) -> i32;
     fn GetOverlappedResult(h: isize, ov: *mut Overlapped, got: *mut u32, wait: i32) -> i32;
-    fn CreateEventW(sa: *const core::ffi::c_void, manual: i32, initial: i32, name: *const u16) -> isize;
+    fn CreateEventW(
+        sa: *const core::ffi::c_void,
+        manual: i32,
+        initial: i32,
+        name: *const u16,
+    ) -> isize;
     fn ResetEvent(h: isize) -> i32;
     fn WaitForSingleObject(h: isize, ms: u32) -> u32;
     fn GetLastError() -> u32;
@@ -141,7 +140,12 @@ extern "system" {
 
 #[link(name = "setupapi")]
 extern "system" {
-    fn SetupDiGetClassDevsW(guid: *const Guid, enumerator: *const u16, hwnd: isize, flags: u32) -> isize;
+    fn SetupDiGetClassDevsW(
+        guid: *const Guid,
+        enumerator: *const u16,
+        hwnd: isize,
+        flags: u32,
+    ) -> isize;
     fn SetupDiEnumDeviceInterfaces(
         set: isize,
         devinfo: *mut core::ffi::c_void,
@@ -266,7 +270,10 @@ unsafe fn enumerate(vid_filter: u16, pid_filter: u16) -> Vec<Collection> {
 
     let set = SetupDiGetClassDevsW(&guid, ptr::null(), 0, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
     if set == INVALID_HANDLE_VALUE {
-        eprintln!("SetupDiGetClassDevsW failed, win32 error {}", GetLastError());
+        eprintln!(
+            "SetupDiGetClassDevsW failed, win32 error {}",
+            GetLastError()
+        );
         return found;
     }
 
@@ -287,7 +294,11 @@ unsafe fn enumerate(vid_filter: u16, pid_filter: u16) -> Vec<Collection> {
         let mut buf = vec![0u8; 2048];
         // SP_DEVICE_INTERFACE_DETAIL_DATA_W.cbSize: 8 on 64 bit, 6 on 32 bit.
         // DevicePath always begins at byte offset 4.
-        let cb: u32 = if cfg!(target_pointer_width = "64") { 8 } else { 6 };
+        let cb: u32 = if cfg!(target_pointer_width = "64") {
+            8
+        } else {
+            6
+        };
         buf[0..4].copy_from_slice(&cb.to_le_bytes());
 
         let mut required = 0u32;
@@ -408,7 +419,9 @@ fn role(c: &Collection) -> &'static str {
         (0x0001, 0x0006) => "keyboard: Windows should REFUSE us, which is the point",
         (0x0001, 0x0002) => "mouse: Windows should refuse us",
         (0x000C, _) => "consumer control: control experiment, proves reading works",
-        (p, _) if p >= 0xFF00 && c.out_len > 1 => "vendor command channel, SignalRGB's, read only here",
+        (p, _) if p >= 0xFF00 && c.out_len > 1 => {
+            "vendor command channel, SignalRGB's, read only here"
+        }
         (p, _) if p >= 0xFF00 => "vendor input pipe: the question under test",
         _ => "other",
     }
@@ -512,7 +525,14 @@ fn rising_bits(prev: &[u8], now: &[u8]) -> Vec<(usize, u8)> {
 
 fn describe_bits(bits: &[(usize, u8)]) -> String {
     bits.iter()
-        .map(|(byte, bit)| format!("byte {} bit {} (linear bit {})", byte, bit, byte * 8 + *bit as usize))
+        .map(|(byte, bit)| {
+            format!(
+                "byte {} bit {} (linear bit {})",
+                byte,
+                bit,
+                byte * 8 + *bit as usize
+            )
+        })
         .collect::<Vec<_>>()
         .join(", ")
 }
@@ -527,7 +547,10 @@ const PID: u16 = 0x1B11;
 fn cmd_list() {
     let cols = unsafe { enumerate(VID, PID) };
     if cols.is_empty() {
-        println!("No HID collection found for {:04X}:{:04X}. Is the keyboard plugged in?", VID, PID);
+        println!(
+            "No HID collection found for {:04X}:{:04X}. Is the keyboard plugged in?",
+            VID, PID
+        );
         return;
     }
 
@@ -542,10 +565,21 @@ fn cmd_list() {
 
     for c in &cols {
         println!("{}", "-".repeat(76));
-        println!("  usage page 0x{:04X}  usage 0x{:04X}   {}", c.usage_page, c.usage, c.kind());
-        println!("  report lengths: input {}  output {}  feature {}", c.in_len, c.out_len, c.feat_len);
+        println!(
+            "  usage page 0x{:04X}  usage 0x{:04X}   {}",
+            c.usage_page,
+            c.usage,
+            c.kind()
+        );
+        println!(
+            "  report lengths: input {}  output {}  feature {}",
+            c.in_len, c.out_len, c.feat_len
+        );
         if c.is_input_candidate() {
-            println!("  >> READ CANDIDATE: {} payload bytes after the report ID", c.in_len - 1);
+            println!(
+                "  >> READ CANDIDATE: {} payload bytes after the report ID",
+                c.in_len - 1
+            );
         } else if c.is_vendor() && c.out_len > 1 {
             println!("  >> command channel (writable). Probably SignalRGB's. We do not touch it.");
         }
@@ -560,7 +594,10 @@ fn cmd_listen(secs: u64) {
     let cols = unsafe { enumerate(VID, PID) };
 
     if cols.is_empty() {
-        println!("No HID collection found for {:04X}:{:04X}. Is the keyboard plugged in?", VID, PID);
+        println!(
+            "No HID collection found for {:04X}:{:04X}. Is the keyboard plugged in?",
+            VID, PID
+        );
         return;
     }
 
@@ -583,7 +620,10 @@ fn cmd_listen(secs: u64) {
         .map(|c| c.tag())
         .collect();
 
-    println!("Listening read only for {} seconds. No byte is ever written to the keyboard.", secs);
+    println!(
+        "Listening read only for {} seconds. No byte is ever written to the keyboard.",
+        secs
+    );
     println!();
     println!("Please do these in order, pausing between each:");
     println!("  1. press G1, then G2, then G3");
@@ -647,9 +687,7 @@ fn cmd_listen(secs: u64) {
         let _ = h.join();
     }
 
-    let sum = |tags: &Vec<String>| -> usize {
-        tags.iter().filter_map(|t| counts.get(t)).sum()
-    };
+    let sum = |tags: &Vec<String>| -> usize { tags.iter().filter_map(|t| counts.get(t)).sum() };
     let input_total = sum(&input_tags);
     let cmd_total = sum(&cmd_tags);
     let consumer_total = sum(&consumer_tags);
@@ -667,7 +705,10 @@ fn cmd_listen(secs: u64) {
     println!();
 
     if cmd_total > 0 {
-        println!("NOTE: {} report(s) on the command channel. That is most likely SignalRGB,", cmd_total);
+        println!(
+            "NOTE: {} report(s) on the command channel. That is most likely SignalRGB,",
+            cmd_total
+        );
         println!("so check the hex above before reading anything into it.");
         println!();
     }
@@ -804,9 +845,19 @@ fn cmd_map() {
         println!("Nothing captured. The G keys are not reaching the vendor pipe as configured.");
         return;
     }
-    println!("{:<5} {:<12} {:>5} {:>4} {:>12}", "key", "collection", "byte", "bit", "linear bit");
+    println!(
+        "{:<5} {:<12} {:>5} {:>4} {:>12}",
+        "key", "collection", "byte", "bit", "linear bit"
+    );
     for (k, tag, byte, bit) in &mapping {
-        println!("{:<5} {:<12} {:>5} {:>4} {:>12}", k, tag, byte, bit, byte * 8 + *bit as usize);
+        println!(
+            "{:<5} {:<12} {:>5} {:>4} {:>12}",
+            k,
+            tag,
+            byte,
+            bit,
+            byte * 8 + *bit as usize
+        );
     }
     println!();
     println!("Rust table for phase 1:");

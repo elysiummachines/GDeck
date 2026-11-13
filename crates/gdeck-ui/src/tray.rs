@@ -321,7 +321,9 @@ impl Drop for Tray {
         // lets the process exit first, which leaves a dead icon sitting in
         // the tray until something hovers over it. Bounded, so a wedged
         // message loop delays the exit rather than preventing it.
-        let _ = self.done.recv_timeout(std::time::Duration::from_millis(750));
+        let _ = self
+            .done
+            .recv_timeout(std::time::Duration::from_millis(750));
     }
 }
 

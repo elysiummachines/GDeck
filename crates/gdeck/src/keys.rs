@@ -130,7 +130,11 @@ mod tests {
     #[test]
     fn every_bit_is_within_a_valid_report() {
         for &(byte, bit) in G_KEY_BITS.iter() {
-            assert!(byte < MIN_REPORT_LEN, "byte {} is outside the validated length", byte);
+            assert!(
+                byte < MIN_REPORT_LEN,
+                "byte {} is outside the validated length",
+                byte
+            );
             assert!(bit < 8, "bit {} is not a bit index", bit);
         }
     }

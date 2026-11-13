@@ -109,8 +109,7 @@ pub fn seal(plaintext: &[u8]) -> Result<Vec<u8>> {
             });
         }
 
-        let sealed =
-            core::slice::from_raw_parts(output.pb_data, output.cb_data as usize).to_vec();
+        let sealed = core::slice::from_raw_parts(output.pb_data, output.cb_data as usize).to_vec();
         LocalFree(output.pb_data as *mut c_void);
         Ok(sealed)
     }
@@ -181,7 +180,10 @@ pub fn diff_lines(sealed: &str, current: &str) -> Vec<DiffLine> {
     let new: Vec<&str> = current.lines().collect();
 
     if old.len() > MAX_DIFF_LINES || new.len() > MAX_DIFF_LINES {
-        let mut out: Vec<DiffLine> = old.iter().map(|l| DiffLine::Removed(l.to_string())).collect();
+        let mut out: Vec<DiffLine> = old
+            .iter()
+            .map(|l| DiffLine::Removed(l.to_string()))
+            .collect();
         out.extend(new.iter().map(|l| DiffLine::Added(l.to_string())));
         return out;
     }
@@ -321,8 +323,10 @@ mod tests {
     #[test]
     fn a_realistic_target_swap_is_pinpointed() {
         // The attack this exists to catch: the path a key launches is swapped.
-        let before = "version = 1\n\n[G1]\naction = launch\nlabel = Steam\ntarget = C:\\Steam\\steam.exe\n";
-        let after = "version = 1\n\n[G1]\naction = launch\nlabel = Steam\ntarget = C:\\Temp\\evil.exe\n";
+        let before =
+            "version = 1\n\n[G1]\naction = launch\nlabel = Steam\ntarget = C:\\Steam\\steam.exe\n";
+        let after =
+            "version = 1\n\n[G1]\naction = launch\nlabel = Steam\ntarget = C:\\Temp\\evil.exe\n";
         let diff = diff_lines(before, after);
         let changed = changed_only(&diff);
         assert_eq!(changed.len(), 2);

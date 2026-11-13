@@ -72,7 +72,13 @@ enum Kind {
 }
 
 impl Kind {
-    const ALL: [Kind; 5] = [Kind::None, Kind::Launch, Kind::Open, Kind::Note, Kind::Shell];
+    const ALL: [Kind; 5] = [
+        Kind::None,
+        Kind::Launch,
+        Kind::Open,
+        Kind::Note,
+        Kind::Shell,
+    ];
 
     fn title(self) -> &'static str {
         match self {
@@ -656,7 +662,8 @@ impl App {
         let path = match self.security.objects.get(self.security.custom_target) {
             Some(object) => object.path.clone(),
             None => {
-                self.security.message = Some(("Nothing selected to apply it to.".to_string(), false));
+                self.security.message =
+                    Some(("Nothing selected to apply it to.".to_string(), false));
                 return;
             }
         };
@@ -915,9 +922,11 @@ fn fire(
                     let result = actions::perform(slot, &context);
                     let (text, ok, outcome) = match &result {
                         Ok(Performed::Nothing) => (format!("{} is unassigned", key), true, None),
-                        Ok(Performed::Launched { .. }) => {
-                            (format!("{} launched {}", key, slot.label), true, Some(Outcome::Started))
-                        }
+                        Ok(Performed::Launched { .. }) => (
+                            format!("{} launched {}", key, slot.label),
+                            true,
+                            Some(Outcome::Started),
+                        ),
                         Ok(Performed::Focused) => (
                             format!("{} focused {}", key, slot.label),
                             true,
@@ -974,12 +983,16 @@ fn fire(
                                 ),
                             }
                         }
-                        Err(gdeck::Error::Refused { reason }) => {
-                            (format!("{} refused: {}", key, reason), false, Some(Outcome::Refused))
-                        }
-                        Err(err) => {
-                            (format!("{} failed: {}", key, err), false, Some(Outcome::Failed))
-                        }
+                        Err(gdeck::Error::Refused { reason }) => (
+                            format!("{} refused: {}", key, reason),
+                            false,
+                            Some(Outcome::Refused),
+                        ),
+                        Err(err) => (
+                            format!("{} failed: {}", key, err),
+                            false,
+                            Some(Outcome::Failed),
+                        ),
                     };
                     if let Some(outcome) = outcome {
                         let _ = gdeck::audit::record(Some(key), action, outcome, &detail);
@@ -1029,11 +1042,7 @@ fn mix(a: Color32, b: Color32, t: f32) -> Color32 {
 
 fn heading(ui: &mut egui::Ui, text: &str) {
     ui.add_space(12.0);
-    ui.label(
-        RichText::new(text)
-            .size(10.0)
-            .color(theme::MUTED),
-    );
+    ui.label(RichText::new(text).size(10.0).color(theme::MUTED));
     ui.add_space(3.0);
 }
 
@@ -1156,8 +1165,7 @@ impl App {
             // so both would only be the window repeating itself.
             if ui
                 .add(
-                    egui::Button::new(RichText::new("Deck mode").size(11.0))
-                        .fill(theme::SURFACE_2),
+                    egui::Button::new(RichText::new("Deck mode").size(11.0)).fill(theme::SURFACE_2),
                 )
                 .on_hover_text(
                     "Hide the editor and tap keys to fire them, for a touch screen.\n\
@@ -1172,13 +1180,17 @@ impl App {
             if ui
                 .add(
                     egui::Button::new(
-                        RichText::new(if in_security { "Back to keys" } else { "Security" })
-                            .size(11.0)
-                            .color(if in_security {
-                                Color32::WHITE
-                            } else {
-                                theme::FG_2
-                            }),
+                        RichText::new(if in_security {
+                            "Back to keys"
+                        } else {
+                            "Security"
+                        })
+                        .size(11.0)
+                        .color(if in_security {
+                            Color32::WHITE
+                        } else {
+                            theme::FG_2
+                        }),
                     )
                     .fill(if in_security {
                         theme::ACCENT
@@ -1189,7 +1201,11 @@ impl App {
                 .on_hover_text("Access control on the config store")
                 .clicked()
             {
-                self.mode = if in_security { Mode::Edit } else { Mode::Security };
+                self.mode = if in_security {
+                    Mode::Edit
+                } else {
+                    Mode::Security
+                };
                 // Always read the descriptors fresh when the view opens.
                 self.security.loaded = false;
             }
@@ -1205,13 +1221,13 @@ impl App {
                 ui.painter().circle_filled(dot.center(), 4.0, colour);
                 ui.add_space(14.0);
                 ui.label(
-                    RichText::new(&self.integrity).size(12.0).color(
-                        if self.integrity_ok {
+                    RichText::new(&self.integrity)
+                        .size(12.0)
+                        .color(if self.integrity_ok {
                             theme::MUTED
                         } else {
                             theme::WARN
-                        },
-                    ),
+                        }),
                 );
             });
         });
@@ -1243,19 +1259,16 @@ impl App {
 
             if let Some((text, ok)) = &last_result {
                 ui.add_space(8.0);
-                ui.label(
-                    RichText::new(text)
-                        .size(12.0)
-                        .color(if *ok { theme::GOOD } else { theme::CRIT }),
-                );
+                ui.label(RichText::new(text).size(12.0).color(if *ok {
+                    theme::GOOD
+                } else {
+                    theme::CRIT
+                }));
             }
 
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if ui
-                    .add(
-                        egui::Button::new(RichText::new("Edit").size(11.0))
-                            .fill(theme::SURFACE_2),
-                    )
+                    .add(egui::Button::new(RichText::new("Edit").size(11.0)).fill(theme::SURFACE_2))
                     .on_hover_text("Back to editing. Escape does the same.")
                     .clicked()
                 {
@@ -1361,11 +1374,11 @@ impl App {
 
             if let Some((text, ok)) = &self.security.message {
                 ui.add_space(8.0);
-                ui.label(
-                    RichText::new(text)
-                        .size(12.0)
-                        .color(if *ok { theme::GOOD } else { theme::CRIT }),
-                );
+                ui.label(RichText::new(text).size(12.0).color(if *ok {
+                    theme::GOOD
+                } else {
+                    theme::CRIT
+                }));
             }
 
             ui.add_space(14.0);
@@ -1699,11 +1712,11 @@ impl App {
 
                 if let Some((text, ok)) = last_result {
                     ui.add_space(12.0);
-                    ui.label(
-                        RichText::new(text)
-                            .size(11.0)
-                            .color(if ok { theme::GOOD } else { theme::CRIT }),
-                    );
+                    ui.label(RichText::new(text).size(11.0).color(if ok {
+                        theme::GOOD
+                    } else {
+                        theme::CRIT
+                    }));
                 }
             });
         });
@@ -1833,9 +1846,7 @@ impl App {
                 Some(slot.label.clone()),
                 slot.action.type_name(),
                 match &slot.action {
-                    Action::Launch { target, .. } | Action::Open { target } => {
-                        Some(target.clone())
-                    }
+                    Action::Launch { target, .. } | Action::Open { target } => Some(target.clone()),
                     _ => None,
                 },
             ),
@@ -2034,11 +2045,11 @@ impl App {
 
                 if let Some((text, ok)) = &self.status {
                     ui.add_space(6.0);
-                    ui.label(
-                        RichText::new(text)
-                            .size(11.0)
-                            .color(if *ok { theme::GOOD } else { theme::CRIT }),
-                    );
+                    ui.label(RichText::new(text).size(11.0).color(if *ok {
+                        theme::GOOD
+                    } else {
+                        theme::CRIT
+                    }));
                 }
 
                 if let Some(problem) = &self.config_problem {
@@ -2051,11 +2062,7 @@ impl App {
                 }
             });
 
-        ui.label(
-            RichText::new("EDITING")
-                .size(10.0)
-                .color(theme::MUTED),
-        );
+        ui.label(RichText::new("EDITING").size(10.0).color(theme::MUTED));
         ui.label(
             RichText::new(format!("Key {}", self.editor.key))
                 .size(21.0)
@@ -2200,7 +2207,9 @@ impl App {
                     } else if ui
                         .add(
                             egui::Button::new(
-                                RichText::new("Turn shell actions on").size(11.0).color(theme::WARN),
+                                RichText::new("Turn shell actions on")
+                                    .size(11.0)
+                                    .color(theme::WARN),
                             )
                             .stroke(Stroke::new(1.0, theme::WARN)),
                         )
@@ -2247,17 +2256,16 @@ impl App {
                                 .corner_radius(CornerRadius::same(6))
                                 .inner_margin(egui::Margin::symmetric(9, 7))
                                 .show(ui, |ui| {
-                                    egui::ScrollArea::vertical().max_height(room).show(
-                                        ui,
-                                        |ui| {
+                                    egui::ScrollArea::vertical()
+                                        .max_height(room)
+                                        .show(ui, |ui| {
                                             ui.label(
                                                 RichText::new(output)
                                                     .size(11.0)
                                                     .monospace()
                                                     .color(theme::FG_2),
                                             );
-                                        },
-                                    );
+                                        });
                                 });
                         }
                     }
@@ -2272,7 +2280,6 @@ impl App {
                     .color(theme::MUTED),
             );
         }
-
     }
 }
 

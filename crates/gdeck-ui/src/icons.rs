@@ -11,7 +11,12 @@ fn stroke(color: Color32) -> Stroke {
 
 /// Lightning bolt: launch.
 pub fn launch(painter: &egui::Painter, rect: Rect, color: Color32) {
-    let p = |x: f32, y: f32| Pos2::new(rect.left() + rect.width() * x, rect.top() + rect.height() * y);
+    let p = |x: f32, y: f32| {
+        Pos2::new(
+            rect.left() + rect.width() * x,
+            rect.top() + rect.height() * y,
+        )
+    };
     let points = vec![
         p(0.62, 0.05),
         p(0.20, 0.55),
@@ -29,7 +34,12 @@ pub fn launch(painter: &egui::Painter, rect: Rect, color: Color32) {
 
 /// Folder: open a path or URL.
 pub fn open(painter: &egui::Painter, rect: Rect, color: Color32) {
-    let p = |x: f32, y: f32| Pos2::new(rect.left() + rect.width() * x, rect.top() + rect.height() * y);
+    let p = |x: f32, y: f32| {
+        Pos2::new(
+            rect.left() + rect.width() * x,
+            rect.top() + rect.height() * y,
+        )
+    };
     painter.add(egui::Shape::closed_line(
         vec![
             p(0.10, 0.80),
@@ -45,7 +55,12 @@ pub fn open(painter: &egui::Painter, rect: Rect, color: Color32) {
 
 /// Page with a folded corner: note.
 pub fn note(painter: &egui::Painter, rect: Rect, color: Color32) {
-    let p = |x: f32, y: f32| Pos2::new(rect.left() + rect.width() * x, rect.top() + rect.height() * y);
+    let p = |x: f32, y: f32| {
+        Pos2::new(
+            rect.left() + rect.width() * x,
+            rect.top() + rect.height() * y,
+        )
+    };
     painter.add(egui::Shape::closed_line(
         vec![
             p(0.18, 0.10),
@@ -62,7 +77,12 @@ pub fn note(painter: &egui::Painter, rect: Rect, color: Color32) {
 
 /// Console window: shell command.
 pub fn shell(painter: &egui::Painter, rect: Rect, color: Color32) {
-    let p = |x: f32, y: f32| Pos2::new(rect.left() + rect.width() * x, rect.top() + rect.height() * y);
+    let p = |x: f32, y: f32| {
+        Pos2::new(
+            rect.left() + rect.width() * x,
+            rect.top() + rect.height() * y,
+        )
+    };
     painter.rect_stroke(
         Rect::from_two_pos(p(0.10, 0.18), p(0.90, 0.82)),
         egui::CornerRadius::same(2),
@@ -92,7 +112,12 @@ pub fn empty(painter: &egui::Painter, rect: Rect, color: Color32) {
 
 /// Warning triangle, for a key that runs a shell command.
 pub fn warning(painter: &egui::Painter, rect: Rect, color: Color32) {
-    let p = |x: f32, y: f32| Pos2::new(rect.left() + rect.width() * x, rect.top() + rect.height() * y);
+    let p = |x: f32, y: f32| {
+        Pos2::new(
+            rect.left() + rect.width() * x,
+            rect.top() + rect.height() * y,
+        )
+    };
     painter.add(egui::Shape::closed_line(
         vec![p(0.5, 0.12), p(0.95, 0.88), p(0.05, 0.88)],
         Stroke::new(1.4, color),
