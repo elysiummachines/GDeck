@@ -440,3 +440,19 @@ MIT. See [LICENSE](LICENSE).
 The embedded Inter typeface is under the SIL Open Font License 1.1, and its
 licence travels with it in
 [crates/gdeck-ui/assets/Inter-LICENSE.txt](crates/gdeck-ui/assets/Inter-LICENSE.txt).
+
+The binary carries egui's fallback fonts as well. They are compiled in by the
+`default_fonts` feature, kept on purpose so there is always a working typeface
+even when the system font cannot be read. Three of the five survive the link,
+established by searching the built executable for each font file's own header
+rather than by reading the dependency list:
+
+| Font | Bytes in `gdeck-ui.exe` | Licence |
+|---|---|---|
+| `Ubuntu-Light.ttf` | 361,676 | Ubuntu Font Licence 1.0 |
+| `Hack-Regular.ttf` | 309,408 | MIT, with public domain DejaVu work |
+| `egui-icons.ttf` | 3,484 | MIT, a subset of emoji-icon-font |
+
+`NotoEmoji-Regular.ttf` and `emoji-icon-font.ttf` are not in the binary. Every
+one of these licence texts ships in the `fonts` folder of the
+`epaint_default_fonts` crate.
