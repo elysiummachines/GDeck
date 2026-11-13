@@ -79,6 +79,23 @@ jobs:
           Copy-Item target\release\gdeck-ui.exe, target\release\gdeck.exe, README.md, LICENSE, CHANGELOG.md pkg\
           Copy-Item docs\THREAT-MODEL.md, docs\PHASE0-FINDINGS.md pkg\docs\
           Copy-Item crates\gdeck-ui\assets\Inter-LICENSE.txt pkg\docs\
+
+          # What built this. The toolchain floats with stable on purpose, so
+          # without this the only record of which compiler produced these
+          # binaries is a CI log that GitHub eventually ages out. Someone
+          # filing a bug against this zip in eight months can then say what
+          # they actually have.
+          $sha = (git rev-parse HEAD).Trim()
+          @(
+            "G Deck $env:TAG"
+            "built    $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')) UTC"
+            "commit   $sha"
+            "rustc    $(rustc --version)"
+            "cargo    $(cargo --version)"
+            "runner   $env:RUNNER_OS, image $env:ImageOS $env:ImageVersion"
+            "workflow $env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+          ) | Out-File pkg\build-info.txt -Encoding ascii
+          Get-Content pkg\build-info.txt | Write-Host
           Compress-Archive -Path pkg\* -DestinationPath "$name.zip"
 
           # Published alongside the zip because the binaries are unsigned.
