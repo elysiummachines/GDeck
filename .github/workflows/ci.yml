@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install the Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      # The dependency build is the bulk of this job. The crates themselves
+      # compile in seconds.
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Formatting
+        run: cargo fmt --all --check
+
+      # Warnings are errors here on purpose. A lint that is allowed to
+      # accumulate stops being read.
+      - name: Lints
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      - name: Tests
+        run: cargo test --workspace --locked
+
+      # Writes and removes a value under HKCU\...\Run, which is why it is
+      # excluded from the default run. The runner is thrown away afterwards,
+      # so this is the right place to exercise it. The test refuses to run at
+      # all if a value is already present.
+      - name: Autostart test, which touches the registry
+        run: cargo test -p gdeck-ui --locked -- --ignored --nocapture
+
+      - name: Build
+        run: cargo build --workspace --release --locked
+
+      # The claims this project makes about its own binaries, asserted. A
+      # change that quietly opens a socket or links a HID write fails here
+      # rather than reaching a release.
+      - name: Verify the binaries
+        shell: pwsh
+        run: .\.github\scripts\verify-binary.ps1

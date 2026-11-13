@@ -272,11 +272,31 @@ mod tests {
     #[test]
     #[ignore = "writes to HKCU, run it deliberately"]
     fn enable_then_disable_leaves_the_key_as_it_was() {
-        assert_eq!(
-            state(),
-            State::Off,
-            "something is already under this name; refusing to overwrite it"
-        );
+        // Skipped rather than failed when a value is already there, because
+        // on a machine where autostart is simply turned on a failure would
+        // look like a defect rather than what it is.
+        //
+        // On CI it fails instead. A throwaway runner cannot have a value, so
+        // one being there means something is wrong, and the test harness
+        // swallows output from passing tests: a quiet skip would be
+        // indistinguishable from a real run, which is the whole thing this
+        // test exists to avoid.
+        let before = state();
+        if before != State::Off {
+            if std::env::var_os("CI").is_some() {
+                panic!(
+                    "a Run value is already present on a CI runner: {:?}. \
+                     This test cannot have run for real.",
+                    before
+                );
+            }
+            eprintln!(
+                "SKIPPED: a Run value is already present ({:?}). This test will not \
+                 overwrite one. Turn autostart off in G Deck and run it again.",
+                before
+            );
+            return;
+        }
 
         enable().expect("write the Run value");
         assert_eq!(state(), State::On, "the value should point at this test");

@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build, e.g. v0.1.0'
+        required: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    # Resolved once, here. Every step below reads it from the environment
+    # rather than interpolating it into a script body, so a tag containing
+    # shell metacharacters is data rather than code.
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          # On a tag push this is the tag. On a manual run it is the tag that
+          # was typed in, so the build is of that tag's code rather than of
+          # whatever main happens to be at.
+          ref: ${{ github.event.inputs.tag || github.ref_name }}
+
+      - name: Install the Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Stamp the version into the manifest
+        shell: pwsh
+        run: .\.github\scripts\stamp-version.ps1 -Tag $env:TAG
+
+      # Not --locked: the step above just rewrote Cargo.lock with the stamped
+      # version, so requiring it to be unchanged would fail by construction.
+      - name: Build
+        run: cargo build --workspace --release
+
+      - name: Verify the binaries
+        shell: pwsh
+        run: .\.github\scripts\verify-binary.ps1
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $name = "GDeck-$env:TAG-x64"
+          New-Item -ItemType Directory -Path pkg\docs | Out-Null
+          Copy-Item target\release\gdeck-ui.exe, target\release\gdeck.exe, README.md, LICENSE, CHANGELOG.md pkg\
+          Copy-Item docs\THREAT-MODEL.md, docs\PHASE0-FINDINGS.md pkg\docs\
+          Copy-Item crates\gdeck-ui\assets\Inter-LICENSE.txt pkg\docs\
+          Compress-Archive -Path pkg\* -DestinationPath "$name.zip"
+
+          # Published alongside the zip because the binaries are unsigned.
+          # Without this there is no way for anyone downloading them to tell
+          # whether they got what this workflow actually produced.
+          $lines = foreach ($exe in 'gdeck-ui.exe', 'gdeck.exe') {
+            $hash = (Get-FileHash "target\release\$exe" -Algorithm SHA256).Hash.ToLower()
+            Write-Host "SHA-256  $hash  $exe"
+            "$hash  $exe"
+          }
+          $lines | Out-File "$name.sha256" -Encoding ascii
+
+      - name: Build the release notes
+        shell: pwsh
+        run: |
+          # The notes and CHANGELOG.md are the same text by construction.
+          # A tag with no changelog section fails the job rather than
+          # publishing a release with empty notes.
+          .\.github\scripts\changelog-section.ps1 -Tag $env:TAG |
+            Set-Content release-notes.md -Encoding utf8
+          Get-Content release-notes.md | Write-Host
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          body_path: release-notes.md
+          files: |
+            GDeck-*.zip
+            GDeck-*.sha256
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
