@@ -1,6 +1,6 @@
 # Phase 0 findings: Corsair K95 RGB G key capture
 
-Status: **PASSED**. Date: 2026-11-11. Machine: CW03, Windows 11 Pro 22631.
+Status: **PASSED**. Date: 2026-11-11. Machine: Windows 11 Pro 22631, x64.
 
 Phase 0 asked one question: can we read the 18 G keys without Corsair software,
 without breaking normal typing, and without fighting SignalRGB. The answer is
