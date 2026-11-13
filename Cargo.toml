@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = ["crates/probe", "crates/gdeck", "crates/gdeck-ui"]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.74"
+publish = false
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

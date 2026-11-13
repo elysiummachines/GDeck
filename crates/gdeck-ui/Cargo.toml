@@ -1,0 +1,36 @@
+[package]
+name = "gdeck-ui"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "Interface for G Deck. Draws pixels; owns no security decisions."
+
+# This is the ONLY crate in the workspace with third party dependencies.
+#
+# `gdeck`, which reads the keyboard, applies security descriptors, parses the
+# config, seals it and launches processes, has none and is meant to keep none.
+# Check it rather than take it on trust:
+#
+#     cargo tree -p gdeck
+#
+# Everything below exists to put pixels on a screen. None of it can reach the
+# HID pipe, a security descriptor, or the decision about what gets executed.
+[dependencies]
+gdeck = { path = "../gdeck" }
+
+# Default features are not used. They pull accesskit and a pile of locale
+# machinery, roughly doubling the tree, for a screen reader integration this
+# does not use. `default_fonts` is kept so there is always a working typeface
+# even if the system font cannot be read.
+eframe = { version = "0.37", default-features = false, features = [
+    "glow",
+    "default_fonts",
+    # Not optional. Turning default features off silently removed this, and
+    # Ctrl+V in a text field then did nothing at all.
+    "clipboard",
+] }
+
+[[bin]]
+name = "gdeck-ui"
+path = "src/main.rs"

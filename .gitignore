@@ -1,0 +1,24 @@
+# Build output. Around 2 GB, and reproducible from source with cargo build.
+/target/
+
+# Cargo.lock IS committed, deliberately. This workspace produces binaries
+# rather than a published library, and the point of the project is that its
+# dependency set can be audited. A lock file pins the exact versions that were
+# reviewed, so leaving it out would make that impossible.
+
+# Windows leavings
+Thumbs.db
+desktop.ini
+*.lnk
+
+# Editors
+.vs/
+.vscode/
+.idea/
+*.swp
+*~
+
+# Build artefacts that can escape the target directory
+*.pdb
+*.ilk
+*.res

@@ -1,0 +1,23 @@
+[package]
+name = "gdeck"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "Read only G key input layer for the Corsair K95 RGB (1b1c:1b11)"
+
+# No dependencies, on purpose. Every Win32 entry point is declared by hand in
+# src/ffi.rs, which declares no HID write function. The read only guarantee is
+# therefore checkable in the import table, where HID.DLL shows only Get calls:
+#   dumpbin /imports gdeck.exe
+# (NtWriteFile does appear there; it is the Rust standard library's, for console
+# output. See the note at the top of src/ffi.rs.)
+[dependencies]
+
+[lib]
+name = "gdeck"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gdeck"
+path = "src/main.rs"

@@ -1,0 +1,16 @@
+# Normalise line endings in the repository, check out whatever is native.
+* text=auto
+
+# Binary assets, which must never be line ending converted. The fonts in
+# particular would be silently corrupted by it.
+*.ttf binary
+*.otf binary
+*.png binary
+*.ico binary
+*.res binary
+
+# Keep these as they are written.
+*.ps1 text
+*.rs  text
+*.md  text
+*.toml text
