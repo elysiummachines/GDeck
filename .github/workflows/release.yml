@@ -34,9 +34,29 @@ jobs:
 
       - name: Install the Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
+
+      # A release has to clear the same bar as a pull request. Before this,
+      # a tag published whatever happened to compile, whatever CI thought of
+      # it, which is exactly what happened to v0.1.0.
+      #
+      # These run before the version is stamped, so they can use --locked
+      # against the lock file as the tag carries it. Stamping rewrites it.
+      - name: Formatting
+        run: cargo fmt --all --check
+
+      - name: Lints
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      - name: Tests
+        run: cargo test --workspace --locked
+
+      - name: Autostart test, which touches the registry
+        run: cargo test -p gdeck-ui --locked -- --ignored --nocapture
 
       - name: Stamp the version into the manifest
         shell: pwsh
