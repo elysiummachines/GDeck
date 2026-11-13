@@ -433,6 +433,12 @@ die first and leave a dead icon in the tray until something hovers over it.
   scaling, for the renderer reasons above. On a scaled display it looks
   markedly better.
 
+## Contributing
+
+Branch naming, commit style, what CI asserts on every change and the six
+things this project will not take are in
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
