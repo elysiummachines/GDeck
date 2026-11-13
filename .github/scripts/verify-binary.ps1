@@ -29,6 +29,14 @@
 
       5. The core crate still has no dependencies at all.
 
+      6. The fonts in the binary are the three the README names, with the two
+         the linker drops still dropped. Checked by looking for each font
+         file's own header in the executable rather than by reading the
+         dependency list, because the licences that travel with a release are
+         decided by the bytes that are in it. An egui update that swaps a font
+         or revives a dropped one fails here instead of quietly making the
+         licence section wrong.
+
     It does not assert an exact binary size. That moves with the toolchain,
     and asserting it would produce failures that mean nothing.
 #>
@@ -161,6 +169,85 @@ try {
 } finally {
     Pop-Location
 }
+
+# 6. The fonts the binary actually carries.
+Write-Host '=== embedded fonts'
+
+# The README's claim, as data. $true means the bytes are expected to be in
+# the executable, $false means the linker is expected to drop them.
+$claimed = [ordered]@{
+    'Ubuntu-Light.ttf'      = $true
+    'Hack-Regular.ttf'      = $true
+    'egui-icons.ttf'        = $true
+    'NotoEmoji-Regular.ttf' = $false
+    'emoji-icon-font.ttf'   = $false
+    'Inter-Regular.ttf'     = $true
+    'Inter-SemiBold.ttf'    = $true
+}
+
+$ui = Join-Path $root 'target\release\gdeck-ui.exe'
+if (-not (Test-Path $ui)) {
+    Fail 'gdeck-ui.exe was not built, so its fonts cannot be checked'
+} else {
+    # Asking cargo where the crate was unpacked, rather than guessing at a
+    # registry path, so this keeps working when the version moves.
+    Push-Location $root
+    try {
+        $meta = (& cargo metadata --format-version 1 --filter-platform x86_64-pc-windows-msvc) | ConvertFrom-Json
+    } finally {
+        Pop-Location
+    }
+    $epaint = $meta.packages | Where-Object { $_.name -eq 'epaint_default_fonts' } | Select-Object -First 1
+
+    if (-not $epaint) {
+        Fail 'epaint_default_fonts is not in the dependency graph, so the font claim cannot be checked'
+    } else {
+        $dirs = @(
+            (Join-Path (Split-Path $epaint.manifest_path) 'fonts')
+            (Join-Path $root 'crates\gdeck-ui\assets')
+        )
+        $files = @(Get-ChildItem -Path $dirs -Filter *.ttf -ErrorAction SilentlyContinue)
+        if ($files.Count -eq 0) {
+            Fail 'no font files were found to check against, so this check proved nothing'
+        }
+
+        # Code page 28591 maps every byte to the character of the same value,
+        # so IndexOf below is a byte search wearing a string's clothes.
+        $latin1 = [System.Text.Encoding]::GetEncoding(28591)
+        $haystack = $latin1.GetString([System.IO.File]::ReadAllBytes($ui))
+
+        foreach ($file in $files) {
+            # The first 512 bytes are the font's table directory, which is
+            # unique to it and survives into the executable verbatim.
+            $bytes = [System.IO.File]::ReadAllBytes($file.FullName)
+            $take = [Math]::Min(512, $bytes.Length)
+            $needle = $latin1.GetString($bytes, 0, $take)
+            $present = $haystack.IndexOf($needle, [System.StringComparison]::Ordinal) -ge 0
+
+            if (-not $claimed.Contains($file.Name)) {
+                $where = if ($present) { 'and it is in the binary' } else { 'though the linker drops it' }
+                Fail "$($file.Name) ships with a dependency but the README does not account for it, $where"
+                continue
+            }
+
+            if ($present -eq $claimed[$file.Name]) {
+                $state = if ($present) { '{0,7:N0} bytes, in the binary' -f $bytes.Length } else { 'dropped by the linker, as claimed' }
+                Pass "$($file.Name.PadRight(22)) $state"
+            } elseif ($present) {
+                Fail "$($file.Name) is in the binary but the README says the linker drops it. Its licence now travels with every release."
+            } else {
+                Fail "$($file.Name) is named in the README but is not in the binary. The licence section claims more than it ships."
+            }
+        }
+
+        $gone = @($claimed.Keys | Where-Object { $_ -notin $files.Name })
+        if ($gone.Count -gt 0) {
+            Fail "the README names fonts that no dependency ships any more: $($gone -join ', ')"
+        }
+    }
+}
+
+Write-Host ''
 
 Write-Host ''
 if ($failures.Count -gt 0) {
