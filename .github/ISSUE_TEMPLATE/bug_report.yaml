@@ -1,0 +1,95 @@
+name: Bug report
+description: G Deck does something it should not, or will not do something it should.
+title: "[Bug] "
+labels:
+  - bug
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        G Deck supports one keyboard: the original Corsair K95 RGB, `1b1c:1b11`.
+        Other Corsair models report their G keys on a different collection and
+        are not supported today. If yours is a different model, say so below and
+        this becomes a hardware report rather than a bug, which saves us both a
+        round trip.
+
+  - type: input
+    id: version
+    attributes:
+      label: G Deck version
+      description: >
+        The first line of `build-info.txt` in the zip you downloaded. If you
+        built it yourself, the commit you built from.
+      placeholder: G Deck v0.1.1
+    validations:
+      required: true
+
+  - type: input
+    id: hardware_id
+    attributes:
+      label: Keyboard model and hardware id
+      description: >
+        Device Manager, Keyboards, your Corsair device, Properties, Details,
+        Hardware Ids. The original K95 RGB reports `VID_1B1C&PID_1B11`.
+      placeholder: Corsair K95 RGB, VID_1B1C&PID_1B11
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of G Deck
+      options:
+        - Key detection, a G key does nothing or the wrong one fires
+        - Actions, the bound program, folder, note or command does not run
+        - The interface, layout, theme or a control
+        - Autostart
+        - The config file, loading or saving
+        - Security and integrity, the policy or seal panel
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Run `winver`, or Settings, System, About.
+      placeholder: Windows 11 Pro 24H2, build 26100
+    validations:
+      required: false
+
+  - type: dropdown
+    id: icue
+    attributes:
+      label: Was Corsair iCUE running
+      description: >
+        G Deck never writes to the keyboard, so iCUE should not contend with
+        it. Knowing either way rules it in or out.
+      options:
+        - "No, iCUE is not installed"
+        - "Installed, but not running"
+        - "Yes, it was running"
+        - "Not sure"
+    validations:
+      required: false
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Anything G Deck printed
+      description: >
+        The exact text of any error in the window, or the audit log line for a
+        failed action. Paste it as text rather than a screenshot where you can.
+      render: text
+    validations:
+      required: false

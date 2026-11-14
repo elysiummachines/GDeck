@@ -1,0 +1,9 @@
+# Words this project uses that are not English.
+#
+# SDDL abbreviations appear as bare two letter tokens inside security
+# descriptor strings, where they are the standard spelling and not a typo.
+# `BA` is BUILTIN\Administrators. Any further SDDL abbreviation that the
+# dictionary objects to belongs here rather than in a comment at the call
+# site, so there is one list to read instead of a scattering of suppressions.
+[default.extend-words]
+BA = "BA"

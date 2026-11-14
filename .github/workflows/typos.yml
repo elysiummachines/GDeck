@@ -1,0 +1,31 @@
+# A spell check over the whole repository. This project is mostly prose by
+# volume, in the README, the threat model and the comments, and a typo in a
+# claim about what the binary does is worse than a typo in a sentence.
+#
+# Words this project uses that are not in the dictionary belong in
+# _typos.toml, not in an ignore comment at the call site.
+name: Typos
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  typos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      # Pinned rather than floating. A dictionary that grows on its own
+      # turns an unrelated pull request red for a word nobody touched.
+      - name: Spell check
+        uses: crate-ci/typos@v1.52.0
