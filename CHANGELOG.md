@@ -4,6 +4,22 @@ Notable changes, newest first. Each version's section is what the GitHub
 release for that tag says, because `release.yml` reads this file rather than
 writing its own notes.
 
+## v0.1.1
+
+A bug fix release. The G keys do exactly what they did in v0.1.0.
+
+- **Autostart now works on an account whose `Run` key has never been
+  created.** Windows makes that key on demand, so on a clean account turning
+  autostart on failed outright, and the interface showed "Could not read the
+  Run key, code 2" in red on a machine that was working perfectly.
+- **The zip carries `build-info.txt`**, recording the tag, the UTC build
+  time, the commit, the rustc and cargo versions, the runner image and a link
+  to the workflow run that produced it.
+- **A release now runs formatting, lints, the tests and the registry test
+  before it builds.** v0.1.0 published while CI was red, because the release
+  and CI workflows watch different events and the release one had no checks
+  at all.
+
 ## v0.1.0
 
 First release. Maps the 18 G keys on a Corsair K95 RGB (`1b1c:1b11`) to
