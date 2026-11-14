@@ -553,8 +553,8 @@ pub fn to_text(config: &Config) -> String {
     out.push_str(&format!("version = {}\n", config.version));
     out.push_str(&format!("shell_enabled = {}\n", config.shell_enabled));
 
-    for index in 0..G_KEY_COUNT {
-        let slot = match &config.slots[index] {
+    for (index, slot) in config.slots.iter().enumerate() {
+        let slot = match slot {
             Some(slot) => slot,
             None => continue,
         };
