@@ -1,0 +1,12 @@
+# No blank issues. Every issue arrives on a form, so it carries the keyboard
+# model and the version without anyone having to ask for them, and it carries
+# its label without anyone having to apply one.
+blank_issues_enabled: false
+
+contact_links:
+  - name: Report a security problem privately
+    url: https://github.com/elysiummachines/GDeck/security/advisories/new
+    about: >
+      G Deck reads a HID device and writes to the registry. If you have found
+      something that affects safety rather than function, report it here
+      rather than in a public issue.

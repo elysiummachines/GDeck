@@ -1,0 +1,27 @@
+# How GitHub groups the "What's Changed" list it generates when a release is
+# created. The categories are the branch prefixes from CONTRIBUTING.md, so a
+# pull request labelled the way it was branched lands in the right section
+# without anyone having to think about it.
+#
+# This file does nothing on its own. It is read once, at the moment the
+# release is created, so it has to be on main before the tag is pushed.
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+  categories:
+    - title: Fixes
+      labels:
+        - bug
+    - title: Features
+      labels:
+        - enhancement
+    - title: Documentation
+      labels:
+        - documentation
+    - title: Maintenance
+      labels:
+        - chore
+    - title: Other
+      labels:
+        - "*"

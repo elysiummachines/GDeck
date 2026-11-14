@@ -1,0 +1,58 @@
+name: Feature request
+description: G Deck should do something it does not do today.
+title: "[Feature] "
+labels:
+  - enhancement
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Six things this project will not take, whatever the use case, because
+        each one destroys a property G Deck exists to have. The reasoning for
+        each is in
+        [CONTRIBUTING.md](https://github.com/elysiummachines/GDeck/blob/main/CONTRIBUTING.md#things-this-project-will-not-take):
+
+        - Writing to the keyboard
+        - A network call of any kind, including an update check
+        - A service, a driver, or a scheduled task
+        - Writing to `HKEY_LOCAL_MACHINE`, or anywhere else machine wide
+        - Reading keyboard input beyond the vendor collection the G keys report on
+        - A dependency added to the `gdeck` core crate
+
+        `docs/THREAT-MODEL.md` says which of those defences are real and against
+        whom, including the ones that are not. It is worth reading before
+        arguing with any of them.
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: What I am asking for is none of the six things above.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: >
+        The problem, not the solution. What are you doing today, and where
+        does it fall down?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like G Deck to do
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+      description: Existing bindings, another tool, or doing it by hand.
+    validations:
+      required: false
