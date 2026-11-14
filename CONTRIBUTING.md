@@ -3,6 +3,10 @@
 G Deck's case rests on properties anyone can check rather than on promises.
 Most of what follows is about keeping those properties checkable.
 
+A security problem goes to the [private advisory form](https://github.com/elysiummachines/GDeck/security/advisories/new)
+rather than to an issue or a pull request. [SECURITY.md](SECURITY.md) has the
+scope and what to expect.
+
 ## Branches
 
 `main` is the only long lived branch. Everything else is short lived and
