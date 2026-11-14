@@ -9,6 +9,15 @@
 *.ico binary
 *.res binary
 
+# README assets. A GIF or a JPEG is full of bytes that look like line
+# endings, and text=auto only guesses binary from a NUL in the first 8000
+# bytes. Guessing is not good enough for a demo that would be silently
+# corrupted on the way in.
+*.gif binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+
 # Keep these as they are written.
 *.ps1 text
 *.rs  text
