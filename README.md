@@ -11,7 +11,7 @@
 [![Rust](https://img.shields.io/badge/Rust-1.74%2B-dea584?style=flat-square)](https://www.rust-lang.org)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](https://www.microsoft.com/windows)
 [![Core deps](https://img.shields.io/badge/Core%20crate-0%20dependencies-brightgreen?style=flat-square)](#verification)
-[![License](https://img.shields.io/badge/License-MIT-grey.svg?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-000000.svg?style=flat-square)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/elysiummachines/GDeck?style=social)](https://github.com/elysiummachines/GDeck/stargazers)
 
 [Features](#features) • [Getting Started](#getting-started) • [Security Model](#security-model) • [Verification](#verification) • [Technical Notes](#technical-notes)
