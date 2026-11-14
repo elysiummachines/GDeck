@@ -14,6 +14,9 @@
 //!   closes that, and it is the same defect as the unquoted service path
 //!   problem.
 //! * Removing the value is the whole uninstall. Nothing else is left behind.
+//! * The `Run` key is created on demand by Windows, so an account that has
+//!   never had an autostart entry does not have one. Absent is read as off,
+//!   and turning autostart on creates the key rather than failing.
 
 #![allow(non_snake_case)]
 
@@ -34,6 +37,8 @@ const ERROR_FILE_NOT_FOUND: i32 = 2;
 
 const KEY_QUERY_VALUE: u32 = 0x0001;
 const KEY_SET_VALUE: u32 = 0x0002;
+
+const REG_OPTION_NON_VOLATILE: u32 = 0;
 
 const REG_SZ: u32 = 1;
 const REG_EXPAND_SZ: u32 = 2;
@@ -67,6 +72,17 @@ extern "system" {
         data: *mut u8,
         len: *mut u32,
     ) -> i32;
+    fn RegCreateKeyExW(
+        key: isize,
+        sub_key: *const u16,
+        reserved: u32,
+        class: *const u16,
+        options: u32,
+        desired: u32,
+        security: *const core::ffi::c_void,
+        out: *mut isize,
+        disposition: *mut u32,
+    ) -> i32;
     fn RegDeleteValueW(key: isize, name: *const u16) -> i32;
     fn RegCloseKey(key: isize) -> i32;
 }
@@ -74,7 +90,9 @@ extern "system" {
 /// What the registry currently says.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum State {
-    /// No value under our name.
+    /// No value under our name. This includes the `Run` key not existing at
+    /// all, which is the normal state of an account that has never had an
+    /// autostart entry.
     Off,
     /// A value that points at the executable now running.
     On,
@@ -116,6 +134,13 @@ pub fn state() -> State {
             KEY_QUERY_VALUE,
             &mut key,
         );
+        // No key is not a failure to read the registry, it is the registry
+        // answering: nothing on this account starts with Windows. Reporting
+        // it as unreadable put an error code in front of someone whose
+        // machine was working exactly as intended.
+        if status == ERROR_FILE_NOT_FOUND {
+            return State::Off;
+        }
         if status != ERROR_SUCCESS {
             return State::Unreadable { code: status };
         }
@@ -188,12 +213,21 @@ pub fn enable() -> Result<(), i32> {
 
     unsafe {
         let mut key = 0isize;
-        let status = RegOpenKeyExW(
+        // Create, not open. Opening fails with ERROR_FILE_NOT_FOUND when the
+        // key is not there yet, which is how turning autostart on failed on
+        // an account that had never used it. Creating a key that already
+        // exists just opens it, so this costs nothing in the common case.
+        let mut disposition = 0u32;
+        let status = RegCreateKeyExW(
             HKEY_CURRENT_USER,
             wide(RUN_KEY).as_ptr(),
             0,
+            ptr::null(),
+            REG_OPTION_NON_VOLATILE,
             KEY_SET_VALUE,
+            ptr::null(),
             &mut key,
+            &mut disposition,
         );
         if status != ERROR_SUCCESS {
             return Err(status);
@@ -230,6 +264,11 @@ pub fn disable() -> Result<(), i32> {
             KEY_SET_VALUE,
             &mut key,
         );
+        // No key means no value under our name, which is the outcome this
+        // function exists to produce. Nothing to do, and nothing created.
+        if status == ERROR_FILE_NOT_FOUND {
+            return Ok(());
+        }
         if status != ERROR_SUCCESS {
             return Err(status);
         }
@@ -285,14 +324,16 @@ mod tests {
         if before != State::Off {
             if std::env::var_os("CI").is_some() {
                 panic!(
-                    "a Run value is already present on a CI runner: {:?}. \
-                     This test cannot have run for real.",
+                    "the Run key is not clear on a CI runner: {:?}. This test \
+                     cannot have run for real. Note that a missing key reads \
+                     as Off, so this is a value or a genuine read failure.",
                     before
                 );
             }
             eprintln!(
-                "SKIPPED: a Run value is already present ({:?}). This test will not \
-                 overwrite one. Turn autostart off in G Deck and run it again.",
+                "SKIPPED: the Run key is not clear ({:?}). This test will not \
+                 overwrite what is there. Turn autostart off in G Deck and run \
+                 it again.",
                 before
             );
             return;
@@ -312,5 +353,43 @@ mod tests {
         assert_eq!(HKEY_CURRENT_USER, 0x8000_0001u32 as i32 as isize);
         assert!(!RUN_KEY.starts_with('\\'));
         assert!(RUN_KEY.ends_with(r"CurrentVersion\Run"));
+    }
+
+    #[test]
+    fn opening_a_key_that_is_not_there_reports_file_not_found() {
+        // The assumption the absent key handling rests on, pinned so it
+        // cannot be argued about. A subkey that does not exist comes back as
+        // ERROR_FILE_NOT_FOUND from the open call itself, which is why
+        // `state` reads that code as Off rather than as a registry it failed
+        // to read. Opening for query creates nothing, so this leaves no trace.
+        unsafe {
+            let mut key = 0isize;
+            let status = RegOpenKeyExW(
+                HKEY_CURRENT_USER,
+                wide(r"Software\G Deck, a subkey that does not exist").as_ptr(),
+                0,
+                KEY_QUERY_VALUE,
+                &mut key,
+            );
+            assert_eq!(
+                status, ERROR_FILE_NOT_FOUND,
+                "a missing subkey must report code 2, not something else"
+            );
+        }
+    }
+
+    #[test]
+    fn an_absent_key_is_not_reported_as_unreadable() {
+        // The regression this guards: `state` used to return
+        // Unreadable { code: 2 } on any account whose Run key had never been
+        // created, and the interface showed that error to someone whose
+        // machine was fine. Whatever this machine's key says, code 2 is the
+        // one answer `state` must never give back.
+        if let State::Unreadable { code } = state() {
+            assert_ne!(
+                code, ERROR_FILE_NOT_FOUND,
+                "an absent Run key must read as Off, not as unreadable"
+            );
+        }
     }
 }
