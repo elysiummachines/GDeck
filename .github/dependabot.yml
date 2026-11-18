@@ -1,0 +1,53 @@
+# Dependency updates.
+#
+# Two ecosystems, because there are two places a version is pinned: the Cargo
+# manifests, and the action references in the workflows. The actions are
+# pinned on purpose, which is exactly why they need watching. A pin nobody
+# revisits is a stale dependency with extra steps.
+#
+# Minor and patch updates are grouped into one pull request per ecosystem, so
+# a quiet week is one PR rather than six. Majors are left out of the group on
+# purpose: GitHub's own documentation says they "continue to be raised as
+# individual pull requests", which is what a breaking change deserves.
+#
+# `applies-to` is omitted because a group defaults to version updates only,
+# and security updates should not wait for a Monday.
+#
+# The `chore` label is what `.github/release.yml` groups under Maintenance, so
+# these land in the right section of the release notes without anyone applying
+# a label by hand.
+version: 2
+
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "chore"
+    groups:
+      cargo-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Dependabot finds the workflows under /.github/workflows from the root.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "chore"
+    groups:
+      actions-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"

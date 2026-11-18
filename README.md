@@ -12,11 +12,15 @@
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](https://www.microsoft.com/windows)
 [![Core deps](https://img.shields.io/badge/Core%20crate-0%20dependencies-brightgreen?style=flat-square)](#verification)
 [![License](https://img.shields.io/badge/License-MIT-000000.svg?style=flat-square)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/elysiummachines/GDeck?style=social)](https://github.com/elysiummachines/GDeck/stargazers)
+[![Stars](https://img.shields.io/github/stars/elysiummachines/GDeck?style=flat-square&color=yellow)](https://github.com/elysiummachines/GDeck/stargazers)
 
 [Features](#features) • [Getting Started](#getting-started) • [Security Model](#security-model) • [Verification](#verification) • [Technical Notes](#technical-notes)
 
 </div>
+
+![G Deck in use, 18 keys filling the window](demo2.gif)
+
+![G Deck editor, with the panel open on key G1](demo.gif)
 
 ## Overview
 
@@ -241,6 +245,10 @@ And what it does **not** do, stated here rather than buried:
   is tamper evidence against an offline or cross-user edit, not against this.
 - Shell actions being off by default is not a boundary, for the reason given
   above.
+
+Found something that affects safety rather than function?
+[SECURITY.md](SECURITY.md) says what is in scope, what is deliberately
+out of scope, and how to report it privately.
 
 ## Project Structure
 
