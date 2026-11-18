@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # Pinned rather than floating. A dictionary that grows on its own
       # turns an unrelated pull request red for a word nobody touched.
