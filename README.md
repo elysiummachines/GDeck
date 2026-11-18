@@ -18,6 +18,10 @@
 
 </div>
 
+![G Deck in use, 18 keys filling the window](demo2.gif)
+
+![G Deck editor, with the panel open on key G1](demo.gif)
+
 ## Overview
 
 G Deck turns the 18 G keys on an original Corsair K95 RGB (`1b1c:1b11`) into a
