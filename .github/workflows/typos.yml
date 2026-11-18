@@ -28,4 +28,4 @@ jobs:
       # Pinned rather than floating. A dictionary that grows on its own
       # turns an unrelated pull request red for a word nobody touched.
       - name: Spell check
-        uses: crate-ci/typos@v1.52.0
+        uses: crate-ci/typos@v1.52.2
